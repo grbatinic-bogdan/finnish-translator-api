@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { mainRoutes } from './routes/MainRoutes';
+import { translationRoutes } from './routes/TranslationRoutes';
 
 class App {
     public app: express.Application;
@@ -20,6 +21,7 @@ class App {
         this.app.use(cors());
         // Routing
         this.app.use('/', mainRoutes);
+        this.app.use('/translations', translationRoutes);
     }
 }
 

@@ -1,5 +1,6 @@
 import { google, sheets_v4 as sheets } from 'googleapis';
 import { JWTInput } from 'google-auth-library';
+import { Translation } from './validationService';
 
 class GoogleSheetReader {
     constructor(
@@ -31,11 +32,6 @@ class GoogleSheetReader {
 
         return result.data;
     }
-}
-
-interface Translation {
-    baseLanguageValue: string;
-    translationValue: string;
 }
 
 export async function getSheetTranslations(

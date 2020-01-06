@@ -10,5 +10,18 @@ services:
             - .:/app
         command: npm run dev
         restart: unless-stopped
+        networks:
+            - redis-net
     redis-server:
-        image: 'redis'
+        image: 'redis:5.0-alpine'
+        command: redis-server --appendonly yes
+        volumes:
+            - redis-data:/data
+        networks:
+            - redis-net
+
+networks:
+    redis-net:
+
+volumes:
+    redis-data:
