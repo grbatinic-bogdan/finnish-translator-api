@@ -12,6 +12,9 @@ services:
         restart: unless-stopped
         networks:
             - redis-net
+        container_name: node-server
+        env_file:
+            - .env
     redis-server:
         image: 'redis:5.0-alpine'
         command: redis-server --appendonly yes
@@ -19,6 +22,9 @@ services:
             - redis-data:/data
         networks:
             - redis-net
+        ports:
+            - '6379:6379'
+        container_name: redis-server
 
 networks:
     redis-net:

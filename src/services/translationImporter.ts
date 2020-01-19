@@ -23,12 +23,35 @@ export class RedisTranslationService {
     }
 }
 
+function removeDuplicateTranslations(translations: Translation[], savedTranslations: Translation[]): Translation[] {
+    if (savedTranslations.length > 0) {
+        const duplicateTranslations = translations.filter(importTranslation => {
+            const isFound = savedTranslations.find(
+                savedTranslations => savedTranslations.baseLanguageValue === importTranslation.baseLanguageValue,
+            );
+
+            return !!isFound;
+        });
+        if (duplicateTranslations.length > 0) {
+            translations = translations.filter(importTranslation => {
+                const foundDuplicate = duplicateTranslations.find(duplicateTranslation => {
+                    return duplicateTranslation.baseLanguageValue === importTranslation.baseLanguageValue;
+                });
+
+                return !!foundDuplicate === false;
+            });
+        }
+    }
+
+    return translations;
+}
+
 export async function importTranslations(
     translations: Translation[],
     redisTranslationService: RedisTranslationService,
 ): Promise<void> {
-    // validate input data
-    console.log(translations);
+    const savedTranslations = await redisTranslationService.fetchTranslations();
+    const translationsToImport = removeDuplicateTranslations(translations, savedTranslations);
 
-    redisTranslationService.addTranslations(translations);
+    redisTranslationService.addTranslations(translationsToImport);
 }

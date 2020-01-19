@@ -6,4 +6,11 @@ App is containerized, so the best course of action is to spin up a docker contai
 
 `docker-compose up`
 
-In order to toy with the api, you will need `service-account-credentials.json` with read access to [google sheets api](https://developers.google.com/sheets/api)
+In order to toy with the api, you will need `service-account-credentials.json` with read access to [google sheets api](https://developers.google.com/sheets/api) placed inside of the root level of the project
+
+## Import translations from google sheet
+
+Run the following command in your terminal:
+
+`docker exec --interactive node-server npx ts-node src/cli/sheets.ts`
+

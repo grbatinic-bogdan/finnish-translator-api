@@ -8,7 +8,7 @@ export const TTranslation = t.type({
 
 export type Translation = t.TypeOf<typeof TTranslation>;
 
-export function validateTranslation(translations: unknown[]): Translation[] {
+export function validateTranslations(translations: unknown[]): Translation[] {
     return translations
         .map(translation => TTranslation.decode(translation))
         .filter(eitherValue => isRight(eitherValue))
