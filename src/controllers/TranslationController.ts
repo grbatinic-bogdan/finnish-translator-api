@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { RedisTranslationService } from '../services/translationImporter';
 import redis from 'redis';
 
-export class TranslationController {
+class TranslationController {
     constructor(private redisTranslationService: RedisTranslationService) {}
 
     public async root(_req: Request, res: Response): Promise<void> {
