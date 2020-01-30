@@ -18,6 +18,8 @@ Run the following command in your terminal:
 
 ### v1
 
+Get all translations
+
 GET `/v1/translations`
 
 ```typescript
@@ -27,6 +29,18 @@ GET `/v1/translations`
         translationValue: string
     }
 ]
+```
+
+
+Get random translations
+
+GET `/v1/random-translation`
+
+```typescript
+{
+    baseLanguageValue: string,
+    translationValue: string
+}
 ```
 
 
