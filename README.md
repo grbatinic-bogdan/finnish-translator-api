@@ -14,3 +14,20 @@ Run the following command in your terminal:
 
 `docker exec --interactive node-server npx ts-node src/cli/sheets.ts`
 
+## API endpoints
+
+### v1
+
+GET `/v1/translations`
+
+```json
+[
+    {
+        baseLanguageValue: string,
+        translationValue: string
+    }
+]
+```
+
+
+
