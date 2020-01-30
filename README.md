@@ -20,7 +20,7 @@ Run the following command in your terminal:
 
 GET `/v1/translations`
 
-```json
+```typescript
 [
     {
         baseLanguageValue: string,
