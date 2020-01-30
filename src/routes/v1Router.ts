@@ -12,6 +12,9 @@ class V1Router {
         this.router.get('/translations', (req: express.Request, res: express.Response) =>
             translationController.root(req, res),
         );
+        this.router.get('/random-translation', (req: express.Request, res: express.Response) =>
+            translationController.randomTranslation(req, res),
+        );
     }
 }
 
