@@ -46,8 +46,8 @@ export async function getSheetTranslations(
         await sheetReader.authorize();
         const result = await sheetReader.read(spreadsheetId, range);
         return result.values.map<Translation>(value => ({
-            baseLanguageValue: value[0],
-            translationValue: value[1],
+            translationValue: value[0],
+            baseLanguageValue: value[1],
         }));
     } catch (error) {
         console.log('failed to fetch translations from google sheet');
