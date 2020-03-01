@@ -23,7 +23,10 @@ export class RedisTranslationService {
     }
 }
 
-function removeDuplicateTranslations(translations: Translation[], savedTranslations: Translation[]): Translation[] {
+export function _removeDuplicateTranslations(
+    translations: Translation[],
+    savedTranslations: Translation[],
+): Translation[] {
     if (savedTranslations.length > 0) {
         const duplicateTranslations = translations.filter(importTranslation => {
             const isFound = savedTranslations.find(
@@ -51,7 +54,7 @@ export async function importTranslations(
     redisTranslationService: RedisTranslationService,
 ): Promise<void> {
     const savedTranslations = await redisTranslationService.fetchTranslations();
-    const translationsToImport = removeDuplicateTranslations(translations, savedTranslations);
+    const translationsToImport = _removeDuplicateTranslations(translations, savedTranslations);
 
     redisTranslationService.addTranslations(translationsToImport);
 }
