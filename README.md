@@ -2,6 +2,12 @@
 
 ## Usage
 
+### Environment setup
+
+In order tu successfully use the api, add your own set of environment variables into `.env` file. Check `.env-example` to get started.
+
+### Docker
+
 App is containerized, so the best course of action is to spin up a docker container by running
 
 `docker-compose up`
@@ -42,6 +48,12 @@ GET `/v1/random-translation`
     translationValue: string
 }
 ```
+
+## Running tests
+
+Add `.env-test` file with similar set of variables as in your `.env` file. Check `.env-example` for further reference.
+
+Run `docker-compose -f docker-compose-test.yaml up --abort-on-container-exit --exit-code-from=node-test-app` cli command to run tests in test docker container.
 
 
 

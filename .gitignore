@@ -2,3 +2,4 @@ node_modules
 dist
 service-account-credentials.json
 .env
+.env-test

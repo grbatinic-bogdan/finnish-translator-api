@@ -1,7 +1,8 @@
 import { Translation } from './validationService';
-import { _removeDuplicateTranslations } from './translationImporter';
+import { _removeDuplicateTranslations, RedisTranslationService } from './translationImporter';
+import redis from 'redis';
 
-describe('translationImporter test suite', () => {
+describe('duplicate translation filtering test suite', () => {
     describe('new translations are not filtered', () => {
         const savedTranslations: Translation[] = [
             {
@@ -63,5 +64,32 @@ describe('translationImporter test suite', () => {
         it('should assert that translation value of filtered translation matches to new translation', () => {
             expect(filteredTranslations[0].translationValue).toBe(newTranslations[2].translationValue);
         });
+    });
+});
+
+describe('translation import test suite', () => {
+    describe('redis client test suite', () => {
+        let redisTranslationService: RedisTranslationService;
+        beforeEach(() => {
+            redisTranslationService = new RedisTranslationService(
+                redis.createClient({
+                    host: process.env['REDIS_SERVER_HOST_NAME'],
+                    port: (process.env['REDIS_SERVER_PORT'] as unknown) as number,
+                }),
+            );
+        });
+
+        describe('fetch translations test suite', () => {
+            let translations: Translation[];
+            beforeEach(async () => {
+                translations = await redisTranslationService.fetchTranslations();
+            });
+
+            it('should assert that there is no saved translations', () => {
+                expect(translations.length).toEqual(0);
+            });
+        });
+
+        //it('should assert that there is no translations saved', () => {});
     });
 });
