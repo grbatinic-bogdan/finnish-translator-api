@@ -1,6 +1,7 @@
 import { Translation } from './validationService';
 import { _removeDuplicateTranslations, RedisTranslationService } from './translationImporter';
 import redis from 'redis';
+import { promisify } from 'util';
 
 describe('duplicate translation filtering test suite', () => {
     describe('new translations are not filtered', () => {
@@ -68,17 +69,22 @@ describe('duplicate translation filtering test suite', () => {
 });
 
 describe('translation import test suite', () => {
-    describe('redis client test suite', () => {
-        let redisTranslationService: RedisTranslationService;
-        beforeEach(() => {
-            redisTranslationService = new RedisTranslationService(
-                redis.createClient({
-                    host: process.env['REDIS_SERVER_HOST_NAME'],
-                    port: (process.env['REDIS_SERVER_PORT'] as unknown) as number,
-                }),
-            );
-        });
+    const redisClient = redis.createClient({
+        host: process.env['REDIS_SERVER_HOST_NAME'],
+        port: (process.env['REDIS_SERVER_PORT'] as unknown) as number,
+    });
+    const redisTranslationService = new RedisTranslationService(redisClient);
 
+    // database setup
+    beforeEach(async () => {
+        const hasTranslations = await redisTranslationService.fetchTranslations();
+        const asyncDeleteKey = promisify(redisClient.del).bind(redisClient);
+        if (hasTranslations.length > 0) {
+            await asyncDeleteKey(redisTranslationService.getTranslationKey());
+        }
+    });
+
+    describe('redis client test suite', () => {
         describe('fetch translations test suite', () => {
             let translations: Translation[];
             beforeEach(async () => {
@@ -90,6 +96,31 @@ describe('translation import test suite', () => {
             });
         });
 
-        //it('should assert that there is no translations saved', () => {});
+        describe('add translations test suite', () => {
+            const newTranslations: Translation[] = [
+                {
+                    baseLanguageValue: 'window',
+                    translationValue: 'ikkuna',
+                },
+                {
+                    baseLanguageValue: 'door',
+                    translationValue: 'ovi',
+                },
+            ];
+            let savedTranslations: Translation[];
+
+            beforeEach(async () => {
+                await redisTranslationService.addTranslations(newTranslations);
+                savedTranslations = await redisTranslationService.fetchTranslations();
+            });
+
+            it('should assert that translations are imported', () => {
+                expect(savedTranslations.length).toBeGreaterThan(0);
+            });
+
+            it('should assert that all the translations have been saved', () => {
+                expect(savedTranslations.length).toEqual(newTranslations.length);
+            });
+        });
     });
 });

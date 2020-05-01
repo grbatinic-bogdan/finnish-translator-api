@@ -21,6 +21,10 @@ export class RedisTranslationService {
             throw new Error('Could not fetch translations');
         }
     }
+
+    getTranslationKey(): string {
+        return this.translationKey;
+    }
 }
 
 export function _removeDuplicateTranslations(
