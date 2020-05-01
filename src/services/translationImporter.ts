@@ -21,9 +21,16 @@ export class RedisTranslationService {
             throw new Error('Could not fetch translations');
         }
     }
+
+    getTranslationKey(): string {
+        return this.translationKey;
+    }
 }
 
-function removeDuplicateTranslations(translations: Translation[], savedTranslations: Translation[]): Translation[] {
+export function _removeDuplicateTranslations(
+    translations: Translation[],
+    savedTranslations: Translation[],
+): Translation[] {
     if (savedTranslations.length > 0) {
         const duplicateTranslations = translations.filter(importTranslation => {
             const isFound = savedTranslations.find(
@@ -51,7 +58,7 @@ export async function importTranslations(
     redisTranslationService: RedisTranslationService,
 ): Promise<void> {
     const savedTranslations = await redisTranslationService.fetchTranslations();
-    const translationsToImport = removeDuplicateTranslations(translations, savedTranslations);
+    const translationsToImport = _removeDuplicateTranslations(translations, savedTranslations);
 
     redisTranslationService.addTranslations(translationsToImport);
 }

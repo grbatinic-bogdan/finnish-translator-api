@@ -1,0 +1,32 @@
+version: '3.2'
+
+services:
+    node-test-app:
+        build: .
+        ports:
+            - '8001:8000'
+        volumes:
+            - .:/app
+        command: npm run test
+        networks:
+            - redis-test-net
+        container_name: node-test-server
+        env_file:
+            - .env-test
+    redis-test-server:
+        image: 'redis:5.0-alpine'
+        command: redis-server --appendonly yes
+        volumes:
+            - redis-test-data:/data
+        networks:
+            - redis-test-net
+        ports:
+            - '6380:6379'
+
+        container_name: redis-test-server
+
+networks:
+    redis-test-net:
+
+volumes:
+    redis-test-data:

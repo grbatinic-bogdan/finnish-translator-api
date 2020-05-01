@@ -18,7 +18,7 @@ class TranslationController {
     public async randomTranslation(_req: Request, res: Response): Promise<void> {
         try {
             const translations = await this.redisTranslationService.fetchTranslations();
-            const randomIndex = getRandomInt(translations.length);
+            const randomIndex = getRandomInt(0, translations.length - 1);
             res.status(200).send(translations[randomIndex]);
         } catch (error) {
             res.status(500).send();
