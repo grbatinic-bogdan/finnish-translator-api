@@ -1,5 +1,6 @@
 import express from 'express';
 import { translationController } from '../controllers/TranslationController';
+import { genericController } from '../controllers/GenericController';
 
 class V1Router {
     public router: express.Router = express.Router();
@@ -15,6 +16,7 @@ class V1Router {
         this.router.get('/random-translation', (req: express.Request, res: express.Response) =>
             translationController.randomTranslation(req, res),
         );
+        this.router.get('/', (req: express.Request, res: express.Response) => genericController.root(req, res));
     }
 }
 
