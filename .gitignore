@@ -3,6 +3,7 @@ dist
 service-account-credentials.json
 .env
 .env-test
+Docker-commands.md
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
