@@ -14,6 +14,7 @@ module.exports = {
     node: true
   },
   rules: {
-    "@typescript-eslint/camelcase": [1, { "properties": "always" }],
+    "@typescript-eslint/camelcase": ["warn", { "properties": "always" }],
+    "@typescript-eslint/explicit-function-return-type": "off",
   }
 }

@@ -1,6 +1,7 @@
 import { Translation } from './validationService';
 import redis from 'redis';
 import { promisify } from 'util';
+import { TranslationService } from './TranslationService';
 
 export class RedisTranslationService {
     constructor(private client: redis.RedisClient, private translationKey: string = 'translations') {}
@@ -53,12 +54,15 @@ export function _removeDuplicateTranslations(
     return translations;
 }
 
-export async function importTranslations(
-    translations: Translation[],
-    redisTranslationService: RedisTranslationService,
-): Promise<void> {
-    const savedTranslations = await redisTranslationService.fetchTranslations();
-    const translationsToImport = _removeDuplicateTranslations(translations, savedTranslations);
+export async function importTranslations(translations: Translation[], translationService: TranslationService) {
+    let translationsToImport: Translation[];
+    const hasTranslationTable = await translationService.hasTranslationTable();
+    if (hasTranslationTable) {
+        const { Items: savedTranslations } = await translationService.fetchTranslations();
+        translationsToImport = _removeDuplicateTranslations(translations, savedTranslations as Translation[]);
+    } else {
+        await translationService.createTranslationTable();
+    }
 
-    redisTranslationService.addTranslations(translationsToImport);
+    return await translationService.addTranslations(translationsToImport);
 }
