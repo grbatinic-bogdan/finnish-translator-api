@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { dynamoDbDocumentClient, dynamoDbClient } from '../services/dynamodb';
 import { TranslationService } from '../services/TranslationService';
-import { getRandomInt } from '../services/utils';
+import { random } from 'lodash';
 
 class TranslationController {
     constructor(private translationService: TranslationService) {}
@@ -21,7 +21,7 @@ class TranslationController {
         try {
             const { Items: translations } = await this.translationService.fetchTranslations();
 
-            const randomIndex = getRandomInt(0, translations.length - 1);
+            const randomIndex = random(0, translations.length - 1);
             res.status(200).send(translations[randomIndex]);
         } catch (error) {
             res.status(500).send();

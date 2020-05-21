@@ -4,29 +4,24 @@ services:
     node-test-app:
         build: .
         ports:
-            - '8001:8000'
+            - '8080:8080'
         volumes:
             - .:/app
         command: npm run test
         networks:
-            - redis-test-net
+            - app-test-net
         container_name: node-test-server
         env_file:
             - .env-test
-    redis-test-server:
-        image: 'redis:5.0-alpine'
-        command: redis-server --appendonly yes
-        volumes:
-            - redis-test-data:/data
-        networks:
-            - redis-test-net
+    dynamodb:
+        image: amazon/dynamodb-local
         ports:
-            - '6380:6379'
-
-        container_name: redis-test-server
+            - '8000:8000'
+        container_name: dynamodb-test
+        hostname: dynamodb-test
+        networks:
+            - app-test-net
+        command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
 
 networks:
-    redis-test-net:
-
-volumes:
-    redis-test-data:
+    app-test-net:
