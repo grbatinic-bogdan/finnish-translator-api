@@ -38,19 +38,22 @@ export async function getSheetTranslations(
     spreadsheetId: string,
     range: string,
     credentials: JWTInput,
-): Promise<Translation[]> {
+): Promise<sheets.Schema$ValueRange> {
     const sheetReader = new GoogleSheetReader(credentials.client_email, credentials.private_key, [
         'https://www.googleapis.com/auth/spreadsheets.readonly',
     ]);
     try {
         await sheetReader.authorize();
-        const result = await sheetReader.read(spreadsheetId, range);
-        return result.values.map<Translation>(value => ({
-            translationValue: value[0],
-            baseLanguageValue: value[1],
-        }));
+        return await sheetReader.read(spreadsheetId, range);
     } catch (error) {
         console.log('failed to fetch translations from google sheet');
         throw error;
     }
+}
+
+export function formatSheetTranslations(result: sheets.Schema$ValueRange): Translation[] {
+    return result.values.map<Translation>(([baseLanguageValue, translationValues]) => {
+        translationValues = (translationValues as string).split(';').map(translationValue => translationValue.trim());
+        return { baseLanguageValue, translationValues };
+    });
 }

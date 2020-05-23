@@ -4,30 +4,29 @@ services:
     node-app:
         build: .
         ports:
-            - '8000:8000'
+            - '8080:8080'
             - '9229:9229'
         volumes:
             - .:/app
         command: npm run dev
         restart: unless-stopped
         networks:
-            - redis-net
+            - app-net
         container_name: node-server
         env_file:
             - .env
-    redis-server:
-        image: 'redis:5.0-alpine'
-        command: redis-server --appendonly yes
-        volumes:
-            - redis-data:/data
-        networks:
-            - redis-net
+    dynamodb:
+        image: amazon/dynamodb-local
         ports:
-            - '6379:6379'
-        container_name: redis-server
+            - '8000:8000'
+        container_name: dynamodb-local
+        hostname: dynamodb-local
+        networks:
+            - app-net
+        command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
 
 networks:
-    redis-net:
+    app-net:
 
 volumes:
-    redis-data:
+    db_data:

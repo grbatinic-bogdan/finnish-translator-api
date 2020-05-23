@@ -1,23 +1,23 @@
 import { Translation } from './validationService';
-import { _removeDuplicateTranslations, RedisTranslationService } from './translationImporter';
-import redis from 'redis';
-import { promisify } from 'util';
+import { _removeDuplicateTranslations } from './translationImporter';
+import { TranslationService } from './TranslationService';
+import { dynamoDbClient, dynamoDbDocumentClient } from './dynamodb';
 
 describe('duplicate translation filtering test suite', () => {
     describe('new translations are not filtered', () => {
         const savedTranslations: Translation[] = [
             {
                 baseLanguageValue: 'window',
-                translationValue: 'ikkuna',
+                translationValues: ['ikkuna'],
             },
             {
                 baseLanguageValue: 'door',
-                translationValue: 'ovi',
+                translationValues: ['ovi'],
             },
         ];
         const newTranslation: Translation = {
             baseLanguageValue: 'chair',
-            translationValue: 'tuoli',
+            translationValues: ['tuoli'],
         };
         const newTranslations: Translation[] = [...savedTranslations, newTranslation];
         const filteredTranslations: Translation[] = _removeDuplicateTranslations(newTranslations, savedTranslations);
@@ -31,7 +31,7 @@ describe('duplicate translation filtering test suite', () => {
         });
 
         it('should assert that translation value of filtered translation matches to new translation', () => {
-            expect(filteredTranslations[0].translationValue).toBe(newTranslation.translationValue);
+            expect(filteredTranslations[0].translationValues.length).toEqual(newTranslation.translationValues.length);
         });
     });
 
@@ -39,18 +39,18 @@ describe('duplicate translation filtering test suite', () => {
         const savedTranslations: Translation[] = [
             {
                 baseLanguageValue: 'window',
-                translationValue: 'ikkuna',
+                translationValues: ['ikkuna'],
             },
             {
                 baseLanguageValue: 'door',
-                translationValue: 'ovi',
+                translationValues: ['ovi'],
             },
         ];
         const newTranslations: Translation[] = [
             ...savedTranslations,
             {
                 baseLanguageValue: 'new',
-                translationValue: 'uusi',
+                translationValues: ['uusi'],
             },
         ];
         const filteredTranslations: Translation[] = _removeDuplicateTranslations(newTranslations, savedTranslations);
@@ -63,32 +63,40 @@ describe('duplicate translation filtering test suite', () => {
         });
 
         it('should assert that translation value of filtered translation matches to new translation', () => {
-            expect(filteredTranslations[0].translationValue).toBe(newTranslations[2].translationValue);
+            expect(filteredTranslations[0].translationValues).toBe(newTranslations[2].translationValues);
         });
     });
 });
 
 describe('translation import test suite', () => {
-    const redisClient = redis.createClient({
-        host: process.env['REDIS_SERVER_HOST_NAME'],
-        port: (process.env['REDIS_SERVER_PORT'] as unknown) as number,
-    });
-    const redisTranslationService = new RedisTranslationService(redisClient);
+    const translationService = new TranslationService(dynamoDbClient, dynamoDbDocumentClient);
 
     // database setup
     beforeEach(async () => {
-        const hasTranslations = await redisTranslationService.fetchTranslations();
-        const asyncDeleteKey = promisify(redisClient.del).bind(redisClient);
-        if (hasTranslations.length > 0) {
-            await asyncDeleteKey(redisTranslationService.getTranslationKey());
+        const hasTranslationsTable = await translationService.hasTranslationTable();
+        if (!hasTranslationsTable) {
+            await translationService.createTranslationTable();
         }
     });
 
-    describe('redis client test suite', () => {
+    afterEach(async () => {
+        const { Count: translationCount } = await translationService.fetchTranslations();
+
+        if (translationCount > 0) {
+            await dynamoDbClient
+                .deleteTable({
+                    TableName: translationService.getTranslationKey(),
+                })
+                .promise();
+        }
+    });
+
+    describe('translation service test suite', () => {
         describe('fetch translations test suite', () => {
             let translations: Translation[];
             beforeEach(async () => {
-                translations = await redisTranslationService.fetchTranslations();
+                const { Items } = await translationService.fetchTranslations();
+                translations = Items as Translation[];
             });
 
             it('should assert that there is no saved translations', () => {
@@ -100,18 +108,20 @@ describe('translation import test suite', () => {
             const newTranslations: Translation[] = [
                 {
                     baseLanguageValue: 'window',
-                    translationValue: 'ikkuna',
+                    translationValues: ['ikkuna'],
                 },
                 {
                     baseLanguageValue: 'door',
-                    translationValue: 'ovi',
+                    translationValues: ['ovi'],
                 },
             ];
             let savedTranslations: Translation[];
 
             beforeEach(async () => {
-                await redisTranslationService.addTranslations(newTranslations);
-                savedTranslations = await redisTranslationService.fetchTranslations();
+                await translationService.addTranslations(newTranslations);
+
+                const { Items } = await translationService.fetchTranslations();
+                savedTranslations = Items as Translation[];
             });
 
             it('should assert that translations are imported', () => {

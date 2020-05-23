@@ -1,9 +1,10 @@
 // import credentials from '../../service-account-credentials.json';
-import { getSheetTranslations } from '../services/googleSheets';
+import { getSheetTranslations, formatSheetTranslations } from '../services/googleSheets';
 
 import { validateTranslations } from '../services/validationService';
-import { importTranslations, RedisTranslationService } from '../services/translationImporter';
-import redis from 'redis';
+import { importTranslations } from '../services/translationImporter';
+import { TranslationService } from '../services/TranslationService';
+import { dynamoDbClient, dynamoDbDocumentClient } from '../services/dynamodb';
 
 const serviceAccountCredentialsBuffer = Buffer.from(
     process.env['GOOGLE_APIS_SERVICE_ACCOUNT_CREDENTIALS_BASE_64'],
@@ -11,19 +12,26 @@ const serviceAccountCredentialsBuffer = Buffer.from(
 );
 const serviceAccountCredentials = JSON.parse(serviceAccountCredentialsBuffer.toString('utf-8'));
 
+const translationService = new TranslationService(dynamoDbClient, dynamoDbDocumentClient);
+
 getSheetTranslations(process.env['TRANSLATIONS_GOOGLE_SHEET_ID'], 'A2:B', serviceAccountCredentials)
     .then(data => {
-        if (Array.isArray(data)) {
-            const validatedTranslations = validateTranslations(data);
-
-            const redisTranslationService = new RedisTranslationService(
-                redis.createClient({
-                    host: process.env['REDIS_SERVER_HOST_NAME'],
-                }),
-            );
-            return importTranslations(validatedTranslations, redisTranslationService);
+        const sheetTranslations = formatSheetTranslations(data);
+        if (!Array.isArray(sheetTranslations)) {
+            process.exit();
         }
+        const validatedTranslations = validateTranslations(sheetTranslations);
+
+        return importTranslations(validatedTranslations, translationService);
     })
-    .then(() => {
+    .then(results => {
+        const numberOfUnprocessedItems = results.reduce((acc, result) => {
+            return (acc += result.UnprocessedItems[translationService.getTranslationKey()].length);
+        }, 0);
+        console.log(`Failed to import ${numberOfUnprocessedItems} new translations`);
+        process.exit();
+    })
+    .catch(error => {
+        console.log(error);
         process.exit();
     });
