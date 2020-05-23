@@ -28,7 +28,7 @@ export function _removeDuplicateTranslations(
 }
 
 export async function importTranslations(translations: Translation[], translationService: TranslationService) {
-    let translationsToImport: Translation[];
+    let translationsToImport = translations;
     const hasTranslationTable = await translationService.hasTranslationTable();
     if (hasTranslationTable) {
         const { Items: savedTranslations } = await translationService.fetchTranslations();

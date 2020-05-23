@@ -12,6 +12,8 @@ const serviceAccountCredentialsBuffer = Buffer.from(
 );
 const serviceAccountCredentials = JSON.parse(serviceAccountCredentialsBuffer.toString('utf-8'));
 
+const translationService = new TranslationService(dynamoDbClient, dynamoDbDocumentClient);
+
 getSheetTranslations(process.env['TRANSLATIONS_GOOGLE_SHEET_ID'], 'A2:B', serviceAccountCredentials)
     .then(data => {
         const sheetTranslations = formatSheetTranslations(data);
@@ -20,11 +22,13 @@ getSheetTranslations(process.env['TRANSLATIONS_GOOGLE_SHEET_ID'], 'A2:B', servic
         }
         const validatedTranslations = validateTranslations(sheetTranslations);
 
-        const translationService = new TranslationService(dynamoDbClient, dynamoDbDocumentClient);
         return importTranslations(validatedTranslations, translationService);
     })
-    .then(result => {
-        console.log(`Imported ${result.length} new translations`);
+    .then(results => {
+        const numberOfUnprocessedItems = results.reduce((acc, result) => {
+            return (acc += result.UnprocessedItems[translationService.getTranslationKey()].length);
+        }, 0);
+        console.log(`Failed to import ${numberOfUnprocessedItems} new translations`);
         process.exit();
     })
     .catch(error => {

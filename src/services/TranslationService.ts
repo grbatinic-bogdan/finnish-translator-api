@@ -1,5 +1,6 @@
 import aws from 'aws-sdk';
 import { Translation } from './validationService';
+import DynamoDB, { DocumentClient, WriteRequest } from 'aws-sdk/clients/dynamodb';
 
 export class TranslationService {
     constructor(
@@ -9,16 +10,41 @@ export class TranslationService {
     ) {}
 
     async addTranslations(translations: Translation[]) {
-        const importPromises = translations.map(translation =>
-            this.documentClient
-                .put({
-                    TableName: this.tableName,
-                    Item: translation,
-                })
-                .promise(),
-        );
+        const numberOfItemsPerBatch = 25;
+        const numberOfWrites = Math.ceil(translations.length / numberOfItemsPerBatch);
+        const batches: Array<WriteRequest[]> = [];
+        for (let i = 0; i < numberOfWrites; i++) {
+            batches.push([]);
+        }
 
-        return await Promise.all(importPromises);
+        for (let i = 0; i < translations.length; i++) {
+            const translation = translations[i];
+            const batchIndex = Math.floor(i / numberOfItemsPerBatch);
+            batches[batchIndex].push({
+                PutRequest: {
+                    Item: {
+                        baseLanguageValue: {
+                            S: translation.baseLanguageValue,
+                        },
+                        translationValues: {
+                            SS: translation.translationValues,
+                        },
+                    },
+                },
+            });
+        }
+
+        const batchWrites = batches.map(batch => {
+            return this.databaseClient
+                .batchWriteItem({
+                    RequestItems: {
+                        [this.tableName]: batch,
+                    },
+                })
+                .promise();
+        });
+
+        return await Promise.all(batchWrites);
     }
 
     async fetchTranslations() {
@@ -51,8 +77,8 @@ export class TranslationService {
                     },
                 ],
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1,
+                    ReadCapacityUnits: 5,
+                    WriteCapacityUnits: 5,
                 },
             })
             .promise();

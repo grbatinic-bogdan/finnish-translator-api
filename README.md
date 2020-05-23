@@ -32,7 +32,7 @@ GET `/v1/translations`
 [
     {
         baseLanguageValue: string,
-        translationValue: string
+        translationValue: string[]
     }
 ]
 ```
@@ -45,7 +45,7 @@ GET `/v1/random-translation`
 ```typescript
 {
     baseLanguageValue: string,
-    translationValue: string
+    translationValue: string[]
 }
 ```
 
@@ -53,7 +53,6 @@ GET `/v1/random-translation`
 
 Add `.env-test` file with similar set of variables as in your `.env` file. Check `.env-example` for further reference.
 
-Run `docker-compose -f docker-compose-test.yaml up --abort-on-container-exit --exit-code-from=node-test-app` cli command to run tests in test docker container.
+### Run tests in docker
 
-
-
+`docker-compose -f docker-compose-test.yaml up --abort-on-container-exit --exit-code-from=node-test-app`
