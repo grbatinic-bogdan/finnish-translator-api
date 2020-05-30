@@ -1,0 +1,27 @@
+name: cd-pipeline
+
+# change this once code pr to master is made: https://help.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#filtering-for-specific-branches-tags-and-paths
+on: [push]
+
+jobs:
+  build-and-push:
+    name: Main job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+        with:
+            repository: grbatinic-bogdan/finnish-translator-api
+      - name: Run tests
+        run: docker-compose -f docker-compose-test.yaml up --abort-on-container-exit --exit-code-from=node-test-app
+      - name: Push Docker image to ECR
+        uses: kciter/aws-ecr-action@v1
+        with:
+            access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+            repo: 287194316288.dkr.ecr.eu-central-1.amazonaws.com/finnish-translator-api
+            region: eu-central-1
+            tags: latest,${{ github.sha }}
+
